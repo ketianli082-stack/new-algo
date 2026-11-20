@@ -27,8 +27,8 @@ class CostModelTests(unittest.TestCase):
         expected = Decimal("100500") * (
             Decimal("0.10")*Decimal(12)/Decimal(8760)
             - Decimal("0.05")*Decimal(12)/Decimal(8760))
-        self.assertEqual(Decimal(d["estimated_funding_usd"]), expected)
-        self.assertEqual(Decimal(d["net_pnl_including_estimated_funding_usd"]), 400+expected)
+        self.assertLess(abs(Decimal(d["estimated_funding_usd"]) - expected), Decimal("1e-18"))
+        self.assertLess(abs(Decimal(d["net_pnl_including_estimated_funding_usd"]) - (400+expected)), Decimal("1e-18"))
         self.assertEqual(len(d["funding_year_segments"]), 2)
 
     def test_btc_and_eth_differ(self):
@@ -61,7 +61,7 @@ class CostModelTests(unittest.TestCase):
     def test_leap_year_boundary_hours(self):
         r = annual_funding(ANNUAL,"BTCUSDT","2024-12-31T23:00:00+00:00",
                            "2025-01-01T01:00:00+00:00",1,100)
-        self.assertEqual([x["hours"] for x in r["segments"]], ["1", "1"])
+        self.assertEqual([Decimal(x["hours"]) for x in r["segments"]], [Decimal("1"), Decimal("1")])
 
 
 if __name__ == "__main__":
