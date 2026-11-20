@@ -1,5 +1,5 @@
 name: BAS-001 ALGOGENE 2025 基准回测
-# Re-submit after verified read-only ALGOGENE API connectivity (2026-11-20).
+# Execute BAS-001 after correction of nested /meta_instrument response (2026-11-20).
 on:
   push:
     branches: [main]
