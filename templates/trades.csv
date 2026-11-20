@@ -1,0 +1,1 @@
+experiment_id,pair_id,group,open_time,close_time,exit_reason,spot_qty,perp_qty,gross_pnl,fees,funding,net_pnl,unhedged_hours,quote_wait_hours,notes
