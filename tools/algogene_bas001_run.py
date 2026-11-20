@@ -118,15 +118,27 @@ def execute(window):
         tasks = call("/get_current_tasks", {}, "current_tasks")
         if tasks.get("status") is not True or tasks.get("res") != []:
             raise RuntimeError("ALGOGENE still has a task or failed preflight")
+        # /meta_instrument returns a dictionary grouped by venue (for example
+        # {"binance": {...}, "atfx": {"MT5": {...}}, ...}), NOT
+        # getContractSpec()'s flat {"contractSize": ...} schema.
+        # Validate instrument metadata exists, without pretending a venue's
+        # trade_contract_size is ALGOGENE's runtime contractSize.
         for sym in SYMBOLS:
             rsp = call("/meta_instrument", {"instrument": sym}, "spec_" + sym)
-            spec = rsp.get("res", {})
-            try:
-                size = float(spec["contractSize"])
-            except (KeyError, TypeError, ValueError):
-                raise RuntimeError("Missing contractSize for " + sym)
-            if rsp.get("status") is not True or abs(size - 1.0) > 1e-9:
-                raise RuntimeError("V8.1 requires confirmed contractSize=1: " + sym)
+            spec = rsp.get("res")
+            if rsp.get("status") is not True or not isinstance(spec, dict) or not spec:
+                raise RuntimeError("Instrument metadata rejected or empty: " + sym)
+            venues = [name for name, value in spec.items() if isinstance(value, dict)]
+            if not venues:
+                raise RuntimeError("Instrument metadata has no venue records: " + sym)
+            run.setdefault("metadata_summary", {})[sym] = {
+                "venue_count": len(venues),
+                "sample_venue_names": venues[:8],
+                "runtime_contract_size_verified": False,
+            }
+            save()
+        # V8.1 independently calls getContractSpec() at backtest startup
+        # and halts if its runtime contractSize != 1; preserve that guard.
         # Single POST attempt only. If request outcome is ambiguous, stop.
         run["status"] = "SUBMITTING"
         save()
