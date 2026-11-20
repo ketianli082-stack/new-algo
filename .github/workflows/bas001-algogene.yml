@@ -1,0 +1,53 @@
+name: BAS-001 ALGOGENE 2025 基准回测
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/bas001-algogene.yml'
+  workflow_dispatch:
+    inputs:
+      window:
+        description: '回测区间'
+        type: choice
+        required: true
+        default: '2025'
+        options:
+          - '2025'
+          - '2023-2025'
+          - '2021-2025'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bas001-algogene-cloud
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: 设置 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 检查本地脚本与模型测试
+        run: |
+          python -m compileall -q strategy tools tests
+          python -m unittest discover -s tests -v
+      - name: 提交 ALGOGENE 云端回测（仅回测，非实盘）
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+          BAS_WINDOW: ${{ inputs.window || '2025' }}
+        run: python -u tools/algogene_bas001_run.py --window "$BAS_WINDOW"
+      - name: 保留结果或失败诊断
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bas001-platform-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: outputs/bas001/
+          if-no-files-found: warn
+          retention-days: 90
