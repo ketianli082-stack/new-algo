@@ -1,11 +1,10 @@
 {
-  "_说明": "人工合成历史结算数据的单元测试示例，绝非真实历史行情。正式使用需替换为实际历史 CSV，确保与所交易合约一致。",
+  "_说明": "仅用于单元测试的虚拟年度费率；正式回测必须提供 BTC、ETH 各年度真实数据和来源；以下例子不是历史均值",
   "quantity": 1,
   "spot_open_ask": 100000,
   "spot_close_bid": 101000,
   "perp_open_bid": 100500,
   "perp_close_ask": 101100,
-  "holding_hours": 25,
   "commission_rates": {
     "spot_open": 0.0005,
     "spot_close": 0.0005,
@@ -21,7 +20,7 @@
   "financing_rate_annual_pct": 0,
   "borrowed_usd": 0,
   "perp_symbol": "BTCUSDT",
-  "funding_history_csv": "tests/fixtures/funding_synthetic.csv",
-  "open_time_utc": "2025-01-01T00:00:00+00:00",
-  "close_time_utc": "2025-01-02T01:00:00+00:00"
+  "annual_funding_csv": "tests/fixtures/annual_funding_synthetic.csv",
+  "open_time_utc": "2024-12-31T12:00:00+00:00",
+  "close_time_utc": "2025-01-01T12:00:00+00:00"
 }
