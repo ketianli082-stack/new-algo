@@ -1,5 +1,5 @@
 {
-  "_说明": "仅用于单元测试的虚拟年度费率；正式回测必须提供 BTC、ETH 各年度真实数据和来源；以下例子不是历史均值",
+  "_说明": "人工年度平均费率样本，仅用于测试，不是真实历史值。",
   "quantity": 1,
   "spot_open_ask": 100000,
   "spot_close_bid": 101000,
@@ -20,7 +20,8 @@
   "financing_rate_annual_pct": 0,
   "borrowed_usd": 0,
   "perp_symbol": "BTCUSDT",
-  "annual_funding_csv": "tests/fixtures/annual_funding_synthetic.csv",
+  "annual_funding_csv": "tests/fixtures/funding_annual_synthetic.csv",
   "open_time_utc": "2024-12-31T12:00:00+00:00",
-  "close_time_utc": "2025-01-01T12:00:00+00:00"
+  "close_time_utc": "2025-01-01T12:00:00+00:00",
+  "holding_hours": 24
 }
