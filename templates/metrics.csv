@@ -1,0 +1,1 @@
+experiment_id,code_sha,backtest_id,start_date,end_date,initial_nav,leverage,fee_setting,risk_free_rate,net_pnl,net_return,annual_return,sharpe,sortino,max_drawdown,calmar,win_rate,profit_factor,trades,avg_holding_hours,notes
