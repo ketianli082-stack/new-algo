@@ -74,6 +74,7 @@ def execute(window):
                      "Offline historical annual Funding estimates are NOT included in platform NAV.",
                      "This action submits BACKTEST only; no live/real orders."]}
     last_call = [0.0]
+    last_endpoint = [None]
 
     def save():
         (out / "platform-responses.json").write_text(
@@ -85,6 +86,7 @@ def execute(window):
         wait = 75 - (time.monotonic() - last_call[0])
         if wait > 0:
             time.sleep(wait)
+        last_endpoint[0] = endpoint
         data = dict(payload, user=user, api_key=key)
         req = urllib.request.Request(
             API + endpoint + ("" if post else "?" + urllib.parse.urlencode(data)),
@@ -177,14 +179,16 @@ def execute(window):
         save()
         return 0 if not run["errors"] else 1
     except Exception as exc:
-        run["errors"].append({"type": type(exc).__name__,
+        run["errors"].append({"endpoint": last_endpoint[0],
+                              "http_status": getattr(exc, "code", None),
+                              "type": type(exc).__name__,
                               "message": redact(str(exc)[:350], secrets)})
         if run["status"] == "SUBMITTING":
             run["status"] = "SUBMISSION_UNCERTAIN"
         else:
             run["status"] = "ERROR"
         save()
-        print("BAS-001 stopped:", run["status"], type(exc).__name__, flush=True)
+        print("BAS-001 stopped:", run["status"], "endpoint=", last_endpoint[0], "HTTP=", getattr(exc, "code", None), type(exc).__name__, flush=True)
         return 1
 
 
