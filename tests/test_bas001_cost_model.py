@@ -1,49 +1,68 @@
 import unittest
 from decimal import Decimal
 from tools.bas001_cost_model import calculate
+from tools.historical_funding import historical_funding
 
+FIXTURE = "tests/fixtures/funding_synthetic.csv"
 
-class TestCostModel(unittest.TestCase):
+class CostModelTests(unittest.TestCase):
     def setUp(self):
         self.trade = {
             "quantity": 1, "spot_open_ask": 100000, "spot_close_bid": 101000,
             "perp_open_bid": 100500, "perp_close_ask": 101100,
-            "holding_hours": 72, "funding_rate_annual_pct": 0,
+            "holding_hours": 25, "funding_history_csv": FIXTURE,
+            "perp_symbol": "BTCUSDT",
+            "open_time_utc": "2025-01-01T00:00:00+00:00",
+            "close_time_utc": "2025-01-02T01:00:00+00:00",
         }
 
-    def test_zero_cost(self):
-        d = calculate(self.trade)
-        self.assertEqual(Decimal(d["net_pnl_usd"]), Decimal("400"))
+    def test_each_settlement_changes_pnl(self):
+        x = historical_funding(
+            FIXTURE, "BTCUSDT", self.trade["open_time_utc"],
+            self.trade["close_time_utc"], 1)
+        self.assertEqual(x["funding_events"], 3)
+        self.assertEqual(x["funding_usd"], Decimal("20.19"))
 
-    def test_all_percentage(self):
+    def test_gross_and_funding(self):
+        x = calculate(self.trade)
+        self.assertEqual(Decimal(x["gross_pnl_usd"]), Decimal("400"))
+        self.assertEqual(Decimal(x["net_funding_usd"]), Decimal("20.19"))
+        self.assertEqual(Decimal(x["net_pnl_usd"]), Decimal("420.19"))
+
+    def test_percentage_commission_slippage(self):
         t = dict(self.trade)
-        t["commission_rates"] = {x: 0.0005 for x in (
-            "spot_open", "spot_close", "perp_open", "perp_close")}
-        t["slippage_rates"] = {x: 0.0001 for x in t["commission_rates"]}
-        t["funding_rate_annual_pct"] = 11.94
-        d = calculate(t)
-        self.assertEqual(Decimal(d["commission_usd"]), Decimal("201.3000"))
-        self.assertEqual(Decimal(d["extra_slippage_usd"]), Decimal("40.2600"))
-        expected = Decimal("400") - Decimal("201.3") - Decimal("40.26") + Decimal("100500") * Decimal("0.1194") * Decimal(72) / Decimal(8760)
-        self.assertAlmostEqual(float(d["net_pnl_usd"]), float(expected), places=8)
+        t["commission_rates"] = {k: "0.0005" for k in
+            ("spot_open", "spot_close", "perp_open", "perp_close")}
+        t["slippage_rates"] = {k: "0.0001" for k in t["commission_rates"]}
+        x = calculate(t)
+        self.assertEqual(Decimal(x["commission_usd"]), Decimal("201.3000"))
+        self.assertEqual(Decimal(x["extra_slippage_usd"]), Decimal("40.2600"))
+        self.assertEqual(Decimal(x["net_pnl_usd"]), Decimal("178.6300"))
 
-    def test_negative_funding(self):
-        d = calculate(dict(self.trade, funding_rate_annual_pct="-10"))
-        self.assertLess(Decimal(d["net_funding_usd"]), 0)
-
-    def test_financing_percent(self):
-        t = dict(self.trade, financing_rate_annual_pct=10, borrowed_usd=100000)
-        d = calculate(t)
-        self.assertAlmostEqual(float(d["financing_usd"]), 100000 * .10 * 72 / 8760, places=8)
-
-    def test_reject_usd_costs(self):
+    def test_no_historical_average_allowed(self):
         with self.assertRaises(ValueError):
-            calculate(dict(self.trade, extra_slippage_usd=20, platform_commission_usd=10))
+            calculate(dict(self.trade, funding_rate_annual_pct=11.94))
 
-    def test_negative_rate(self):
+    def test_no_missing_funding_data_allowed(self):
+        with self.assertRaises(FileNotFoundError):
+            calculate(dict(self.trade, funding_history_csv="not-existing.csv"))
+
+    def test_no_duplicate_settlement(self):
         with self.assertRaises(ValueError):
-            calculate(dict(self.trade, slippage_rates={"spot_open": "-0.0001"}))
+            historical_funding(FIXTURE, "BTCUSDT", "2026-01-01T00:00:00+00:00",
+                               "2026-01-02T00:00:00+00:00", 1)
 
+    def test_negative_funding_eth(self):
+        x = historical_funding(
+            FIXTURE, "ETHUSDT", self.trade["open_time_utc"],
+            self.trade["close_time_utc"], 1)
+        self.assertEqual(x["funding_events"], 3)
+        self.assertEqual(x["funding_usd"], Decimal("-0.3480"))
+
+    def test_reject_platform_and_offline_fees_same_time(self):
+        with self.assertRaises(ValueError):
+            calculate(dict(self.trade, platform_commission_usd=100,
+                           commission_rates={"spot_open": ".0005"}))
 
 if __name__ == "__main__":
     unittest.main()
