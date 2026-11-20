@@ -54,6 +54,24 @@ def settings(window):
                 TradeCost=0)
 
 
+def validate_instrument_metadata(response, symbol):
+    """Validate the observed /meta_instrument response schema.
+
+    Platform metadata may contain only `res`, without `status`.
+    Reject explicit status=false, missing `res`, or empty venue data.
+    This is NOT verification of the strategy runtime getContractSpec().
+    """
+    if not isinstance(response, dict) or response.get("status") is False:
+        raise RuntimeError("Instrument metadata explicitly rejected: " + symbol)
+    spec = response.get("res")
+    if not isinstance(spec, dict) or not spec:
+        raise RuntimeError("Instrument metadata missing or empty: " + symbol)
+    venues = [name for name, value in spec.items() if isinstance(value, dict) and value]
+    if not venues:
+        raise RuntimeError("Instrument metadata has no nonempty venue data: " + symbol)
+    return venues
+
+
 def execute(window):
     out = ROOT / "outputs" / "bas001" / window
     out.mkdir(parents=True, exist_ok=True)
@@ -125,12 +143,7 @@ def execute(window):
         # trade_contract_size is ALGOGENE's runtime contractSize.
         for sym in SYMBOLS:
             rsp = call("/meta_instrument", {"instrument": sym}, "spec_" + sym)
-            spec = rsp.get("res")
-            if rsp.get("status") is not True or not isinstance(spec, dict) or not spec:
-                raise RuntimeError("Instrument metadata rejected or empty: " + sym)
-            venues = [name for name, value in spec.items() if isinstance(value, dict)]
-            if not venues:
-                raise RuntimeError("Instrument metadata has no venue records: " + sym)
+            venues = validate_instrument_metadata(rsp, sym)
             run.setdefault("metadata_summary", {})[sym] = {
                 "venue_count": len(venues),
                 "sample_venue_names": venues[:8],
