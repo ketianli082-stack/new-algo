@@ -50,8 +50,7 @@ def settings(window):
                 InitialCapital=1000000, BaseCurrency="USD", risk_free=0,
                 Leverage=1, allowShortSell=True, dataset=60,
                 isPositionBaseEnv=False, isNewsFeedOn=False,
-                isEconstatFeedon=False, isWeatherFeedOn=False,
-                TradeCost=0)
+                isEconstatFeedon=False, isWeatherFeedOn=False)
 
 
 def validate_instrument_metadata(response, symbol):
@@ -88,7 +87,7 @@ def execute(window):
            "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
            "requested_settings": st, "backtest_id": None, "task_id": None,
            "platform_responses": {}, "errors": [],
-           "notes": ["Native TradeCost=0 is an initial gross baseline only.",
+           "notes": ["Platform fixed-cost parameter omitted; fees assessed separately as percentage of executed notional.",
                      "Offline historical annual Funding estimates are NOT included in platform NAV.",
                      "This action submits BACKTEST only; no live/real orders."]}
     last_call = [0.0]
