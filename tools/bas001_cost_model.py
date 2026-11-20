@@ -1,13 +1,13 @@
 """BAS-001 百分比成本核算：线性 USD 合约、成交价含 Bid/Ask。
 
-费率均为小数（0.0005 = 0.05%）；Funding 与融资使用年化百分比
-结合持仓小时数的时间比例估算。历史均值是代理情景，不等同于逐次资金费结算。
+费率均为小数（0.0005 = 0.05%）；Funding 使用真实历史逐次结算 CSV，不再使用平均费率；融资仍使用年化百分比与时间比例。
 价格为实际/明确标为模拟的成交价格；若真实成交已含滑点，额外滑点设零。
 """
 import argparse
 import json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from tools.historical_funding import historical_funding
 
 HOURS_PER_YEAR = Decimal("8760")
 LEGS = ("spot_open", "spot_close", "perp_open", "perp_close")
@@ -56,17 +56,21 @@ def calculate(r):
         raise ValueError("百分比成本模式不接受平台美元手续费；请先确定毛/净收益口径")
 
     h = dec(r["holding_hours"], "holding_hours")
-    annual_funding_pct = dec(r["funding_rate_annual_pct"], "funding_rate_annual_pct")
+    if "funding_rate_annual_pct" in r:
+        raise ValueError("不再支持平均 Funding；必须输入逐次历史结算 CSV")
+    funding_data = historical_funding(
+        r["funding_history_csv"], r["perp_symbol"],
+        r["open_time_utc"], r["close_time_utc"], q)
     annual_financing_pct = dec(r.get("financing_rate_annual_pct", 0), "financing_rate_annual_pct")
     borrowed = dec(r.get("borrowed_usd", 0), "borrowed_usd")
     if h < 0 or annual_financing_pct < 0 or borrowed < 0:
         raise ValueError("持仓时长、融资年化利率、借款额不能为负")
 
     # 永续空头：年化 Funding 正数代表空头收款；负数代表空头付款。
-    funding = notional["perp_open"] * (annual_funding_pct / 100) * h / HOURS_PER_YEAR
+    funding = funding_data["funding_usd"]
     financing = borrowed * (annual_financing_pct / 100) * h / HOURS_PER_YEAR
     net = gross - commission_model - slippage_model + funding - financing
-    return {k: str(v) for k, v in {
+    out = {k: str(v) for k, v in {
         "spot_gross_pnl_usd": gross_spot,
         "perp_gross_pnl_usd": gross_perp,
         "gross_pnl_usd": gross,
@@ -76,6 +80,10 @@ def calculate(r):
         "financing_usd": financing,
         "net_pnl_usd": net,
     }.items()}
+    out["funding_events"] = funding_data["funding_events"]
+    out["funding_first_event"] = funding_data["first_event"]
+    out["funding_last_event"] = funding_data["last_event"]
+    return out
 
 
 def main():
