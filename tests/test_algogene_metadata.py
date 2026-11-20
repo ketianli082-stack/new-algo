@@ -1,9 +1,14 @@
 import unittest
 
-from tools.algogene_bas001_run import validate_instrument_metadata
+from tools.algogene_bas001_run import validate_instrument_metadata, settings
 
 
 class InstrumentMetadataTests(unittest.TestCase):
+    def test_no_fixed_cost_setting_is_sent(self):
+        for window in ("2025", "2023-2025", "2021-2025"):
+            with self.subTest(window=window):
+                self.assertNotIn("TradeCost", settings(window))
+
     def test_observed_valid_response_without_status(self):
         response = {
             "res": {
