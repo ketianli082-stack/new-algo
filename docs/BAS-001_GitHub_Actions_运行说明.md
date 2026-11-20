@@ -27,7 +27,7 @@ Leverage = 1
 allowShortSell = True
 isPositionBaseEnv = False
 risk_free = 0
-TradeCost = 0  # 初始基准，不代表完整成本后净收益
+# 不向 ALGOGENE 传入固定金额成本字段；百分比手续费在离线模型核算
 ```
 策略源码：`strategy/crypto_basis_v8_1.py`，未改交易逻辑。
 
@@ -41,7 +41,7 @@ TradeCost = 0  # 初始基准，不代表完整成本后净收益
 7. **只提交回测，不调用实盘订单 API。**
 
 ## 成本与 Funding 的特别说明
-BAS-001 的百分比手续费与滑点、BTC/ETH 年度平均 Funding 目前仅为离线分析方案。首轮平台回测 `TradeCost=0`、`risk_free=0`，目的在于复现 V8.1 基准，并非已经获得完整成本后净收益。后续要基于真实订单和有来源的年度费率计算两套收益，并核对平台是否重复计费。
+BAS-001 的百分比手续费与滑点、BTC/ETH 年度平均 Funding 目前仅为离线分析方案。平台回测不传入固定金额手续费参数，`risk_free=0` 仅用于基准复现；这不是完整成本后的净收益。后续要基于真实订单和有来源的年度费率计算两套收益，并核对平台是否重复计费。
 
 ## 如何判断成功
 请查看对应 Action 的状态和 Artifact 中的 `platform-responses.json`：
