@@ -1,11 +1,11 @@
 {
-  "_说明": "百分比成本情景演示，并非真实回测。年化 Funding 11.94% 为 BTCUSDT 2021-2025 二手资料年度均值的等权平均代理，不等于 BTCUSDM/ETHUSDM 的真实历史结算。",
+  "_说明": "人工合成历史结算数据的单元测试示例，绝非真实历史行情。正式使用需替换为实际历史 CSV，确保与所交易合约一致。",
   "quantity": 1,
   "spot_open_ask": 100000,
   "spot_close_bid": 101000,
   "perp_open_bid": 100500,
   "perp_close_ask": 101100,
-  "holding_hours": 72,
+  "holding_hours": 25,
   "commission_rates": {
     "spot_open": 0.0005,
     "spot_close": 0.0005,
@@ -18,7 +18,10 @@
     "perp_open": 0.0001,
     "perp_close": 0.0001
   },
-  "funding_rate_annual_pct": 11.94,
   "financing_rate_annual_pct": 0,
-  "borrowed_usd": 0
+  "borrowed_usd": 0,
+  "perp_symbol": "BTCUSDT",
+  "funding_history_csv": "tests/fixtures/funding_synthetic.csv",
+  "open_time_utc": "2025-01-01T00:00:00+00:00",
+  "close_time_utc": "2025-01-02T01:00:00+00:00"
 }
