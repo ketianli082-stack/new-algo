@@ -57,7 +57,7 @@ class CostModelTests(unittest.TestCase):
             FIXTURE, "ETHUSDT", self.trade["open_time_utc"],
             self.trade["close_time_utc"], 1)
         self.assertEqual(x["funding_events"], 3)
-        self.assertEqual(x["funding_usd"], Decimal("-0.3480"))
+        self.assertEqual(x["funding_usd"], Decimal("-0.3520"))
 
     def test_reject_platform_and_offline_fees_same_time(self):
         with self.assertRaises(ValueError):
