@@ -1,90 +1,94 @@
-"""BAS-001: 逐笔配对套利净收益核算（标准库，无外部依赖）。
+"""BAS-001 百分比成本核算：线性 USD 合约、成交价含 Bid/Ask。
 
-输入 JSON（示例见 config/bas001_cost_example.json）：所有成交价格必须是实际成交价，
-或明确标记为模拟价格；不使用中间价假装成交价。
-注意：当成交价已经包含 Bid/Ask 时，不能再减一次买卖价差。
-Funding 为带符号的实际现金流（收取为正）；financing_usd 为非负融资成本。
+费率均为小数（0.0005 = 0.05%）；Funding 与融资使用年化百分比
+结合持仓小时数的时间比例估算。历史均值是代理情景，不等同于逐次资金费结算。
+价格为实际/明确标为模拟的成交价格；若真实成交已含滑点，额外滑点设零。
 """
 import argparse
 import json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+HOURS_PER_YEAR = Decimal("8760")
+LEGS = ("spot_open", "spot_close", "perp_open", "perp_close")
 
-def dec(value, name):
+
+def dec(v, field):
     try:
-        result = Decimal(str(value))
-        if not result.is_finite():
+        x = Decimal(str(v))
+        if not x.is_finite():
             raise ValueError
-        return result
-    except (InvalidOperation, ValueError):
-        raise ValueError(f"{name} 必须是有限数字") from None
+        return x
+    except (ValueError, InvalidOperation):
+        raise ValueError(f"{field} 必须为有限数值") from None
 
 
-def calculate(record):
-    """以 USD 计价、双腿单位数量相同的线性合约；不适用于未经转换的反向合约。"""
-    qty = dec(record["quantity"], "quantity")
-    if qty <= 0:
-        raise ValueError("quantity 必须大于 0")
-    prices = {k: dec(record[k], k) for k in (
-        "spot_open_ask", "spot_close_bid", "perp_open_bid", "perp_close_ask"
-    )}
-    if any(v <= 0 for v in prices.values()):
-        raise ValueError("成交价必须大于 0")
-    spot_gross = qty * (prices["spot_close_bid"] - prices["spot_open_ask"])
-    perp_gross = qty * (prices["perp_open_bid"] - prices["perp_close_ask"])
-    gross = spot_gross + perp_gross
-
-    platform_fees = dec(record.get("platform_commission_usd", 0), "platform_commission_usd")
-    if platform_fees < 0:
-        raise ValueError("平台已扣手续费不能为负")
-    rates = record.get("commission_rates", {})
-    if platform_fees and any(dec(rates.get(k, 0), k) for k in (
-        "spot_open", "spot_close", "perp_open", "perp_close"
-    )):
-        raise ValueError("平台已有手续费记录时不可再次用费率重复扣费")
-    legs = {
-        "spot_open": qty * prices["spot_open_ask"],
-        "spot_close": qty * prices["spot_close_bid"],
-        "perp_open": qty * prices["perp_open_bid"],
-        "perp_close": qty * prices["perp_close_ask"],
+def calculate(r):
+    q = dec(r["quantity"], "quantity")
+    p = {k: dec(r[k], k) for k in (
+        "spot_open_ask", "spot_close_bid", "perp_open_bid", "perp_close_ask")}
+    if q <= 0 or any(v <= 0 for v in p.values()):
+        raise ValueError("数量和成交价必须为正数")
+    gross_spot = q * (p["spot_close_bid"] - p["spot_open_ask"])
+    gross_perp = q * (p["perp_open_bid"] - p["perp_close_ask"])
+    gross = gross_spot + gross_perp
+    notional = {
+        "spot_open": q * p["spot_open_ask"],
+        "spot_close": q * p["spot_close_bid"],
+        "perp_open": q * p["perp_open_bid"],
+        "perp_close": q * p["perp_close_ask"],
     }
-    calc_fees = sum(notional * dec(rates.get(k, 0), "fee rate")
-                    for k, notional in legs.items())
-    if any(dec(v, "fee rate") < 0 for v in rates.values()):
-        raise ValueError("费率不得为负")
-    commission = platform_fees or calc_fees
 
-    extra_slippage = dec(record.get("extra_slippage_usd", 0), "extra_slippage_usd")
-    funding = dec(record.get("net_funding_usd", 0), "net_funding_usd")
-    financing = dec(record.get("financing_usd", 0), "financing_usd")
-    if extra_slippage < 0 or financing < 0:
-        raise ValueError("滑点损失/融资成本应为非负值")
-    net = gross - commission - extra_slippage + funding - financing
-    return {
-        "spot_gross_pnl_usd": str(spot_gross),
-        "perp_gross_pnl_usd": str(perp_gross),
-        "gross_pnl_usd": str(gross),
-        "commission_usd": str(commission),
-        "extra_slippage_usd": str(extra_slippage),
-        "net_funding_usd": str(funding),
-        "financing_usd": str(financing),
-        "net_pnl_usd": str(net)
-    }
+    def per_leg_cost(field):
+        rates = r.get(field, {})
+        if set(rates).difference(LEGS):
+            raise ValueError(f"{field} 包含未知交易腿")
+        vals = {leg: dec(rates.get(leg, 0), field + "." + leg) for leg in LEGS}
+        if any(v < 0 for v in vals.values()):
+            raise ValueError(field + " 费率不能为负")
+        return sum((notional[leg] * vals[leg] for leg in LEGS), Decimal(0))
+
+    commission_model = per_leg_cost("commission_rates")
+    slippage_model = per_leg_cost("slippage_rates")
+    # 若平台已对账户净值扣手续费，需要避免从账户 NAV 再次扣除。
+    # 此工具计算“基于毛交易 PnL 的净额”，不可用它再扣一次平台已扣成本。
+    if "platform_commission_usd" in r:
+        raise ValueError("百分比成本模式不接受平台美元手续费；请先确定毛/净收益口径")
+
+    h = dec(r["holding_hours"], "holding_hours")
+    annual_funding_pct = dec(r["funding_rate_annual_pct"], "funding_rate_annual_pct")
+    annual_financing_pct = dec(r.get("financing_rate_annual_pct", 0), "financing_rate_annual_pct")
+    borrowed = dec(r.get("borrowed_usd", 0), "borrowed_usd")
+    if h < 0 or annual_financing_pct < 0 or borrowed < 0:
+        raise ValueError("持仓时长、融资年化利率、借款额不能为负")
+
+    # 永续空头：年化 Funding 正数代表空头收款；负数代表空头付款。
+    funding = notional["perp_open"] * (annual_funding_pct / 100) * h / HOURS_PER_YEAR
+    financing = borrowed * (annual_financing_pct / 100) * h / HOURS_PER_YEAR
+    net = gross - commission_model - slippage_model + funding - financing
+    return {k: str(v) for k, v in {
+        "spot_gross_pnl_usd": gross_spot,
+        "perp_gross_pnl_usd": gross_perp,
+        "gross_pnl_usd": gross,
+        "commission_usd": commission_model,
+        "extra_slippage_usd": slippage_model,
+        "net_funding_usd": funding,
+        "financing_usd": financing,
+        "net_pnl_usd": net,
+    }.items()}
 
 
 def main():
-    parser = argparse.ArgumentParser(description="BAS-001 单笔配对套利净收益核算")
-    parser.add_argument("input_json", type=Path)
-    parser.add_argument("--output", type=Path)
-    args = parser.parse_args()
-    payload = json.loads(args.input_json.read_text(encoding="utf-8"))
-    result = calculate(payload)
-    text = json.dumps(result, indent=2, ensure_ascii=False)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("input_json", type=Path)
+    ap.add_argument("--output", type=Path)
+    args = ap.parse_args()
+    d = calculate(json.loads(args.input_json.read_text(encoding="utf-8")))
+    output = json.dumps(d, ensure_ascii=False, indent=2)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text + "\n", encoding="utf-8")
-    print(text)
+        args.output.write_text(output + "\n", encoding="utf-8")
+    print(output)
 
 
 if __name__ == "__main__":
