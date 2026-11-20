@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/bas001-algogene.yml'
+      # 改动工作流时触发一次全新运行；普通代码变更不会重复提交回测。
   workflow_dispatch:
     inputs:
       window:
