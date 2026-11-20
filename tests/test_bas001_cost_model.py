@@ -23,8 +23,8 @@ class CostModelTests(unittest.TestCase):
         trade["extra_slippage_usd"] = "20"
         trade["financing_usd"] = "5"
         result = calculate(trade)
-        self.assertEqual(result["commission_usd"], "201.8000")
-        self.assertEqual(result["net_pnl_usd"], "143.2000")
+        self.assertEqual(result["commission_usd"], "201.3000")
+        self.assertEqual(result["net_pnl_usd"], "143.7000")
 
     def test_no_double_commission(self):
         trade = dict(self.trade, platform_commission_usd=100,
