@@ -1,13 +1,13 @@
 """BAS-001 百分比成本核算：线性 USD 合约、成交价含 Bid/Ask。
 
-费率均为小数（0.0005 = 0.05%）；Funding 使用真实历史逐次结算 CSV，不再使用平均费率；融资仍使用年化百分比与时间比例。
+费率均为小数（0.0005 = 0.05%）；Funding 使用 BTC/ETH 各年度历史平均年化费率（包括跨年分段）；融资仍使用年化利率。
 价格为实际/明确标为模拟的成交价格；若真实成交已含滑点，额外滑点设零。
 """
 import argparse
 import json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from tools.historical_funding import historical_funding
+from tools.annual_funding import annual_funding
 
 HOURS_PER_YEAR = Decimal("8760")
 LEGS = ("spot_open", "spot_close", "perp_open", "perp_close")
@@ -55,12 +55,15 @@ def calculate(r):
     if "platform_commission_usd" in r:
         raise ValueError("百分比成本模式不接受平台美元手续费；请先确定毛/净收益口径")
 
-    h = dec(r["holding_hours"], "holding_hours")
-    if "funding_rate_annual_pct" in r:
-        raise ValueError("不再支持平均 Funding；必须输入逐次历史结算 CSV")
-    funding_data = historical_funding(
-        r["funding_history_csv"], r["perp_symbol"],
-        r["open_time_utc"], r["close_time_utc"], q)
+    if "funding_rate_annual_pct" in r or "funding_history_csv" in r:
+        raise ValueError("请使用带出处的逐年历史均值 CSV，而非统一平均或逐次结算配置")
+    funding_data = annual_funding(
+        r["annual_funding_csv"], r["perp_symbol"],
+        r["open_time_utc"], r["close_time_utc"], q,
+        notional["perp_open"])
+    from tools.annual_funding import _dt
+    start, end = _dt(r["open_time_utc"]), _dt(r["close_time_utc"])
+    h = Decimal(str((end-start).total_seconds())) / Decimal("3600")
     annual_financing_pct = dec(r.get("financing_rate_annual_pct", 0), "financing_rate_annual_pct")
     borrowed = dec(r.get("borrowed_usd", 0), "borrowed_usd")
     if h < 0 or annual_financing_pct < 0 or borrowed < 0:
@@ -69,7 +72,8 @@ def calculate(r):
     # 永续空头：年化 Funding 正数代表空头收款；负数代表空头付款。
     funding = funding_data["funding_usd"]
     financing = borrowed * (annual_financing_pct / 100) * h / HOURS_PER_YEAR
-    net = gross - commission_model - slippage_model + funding - financing
+    net_ex = gross - commission_model - slippage_model - financing
+    net = net_ex + funding
     out = {k: str(v) for k, v in {
         "spot_gross_pnl_usd": gross_spot,
         "perp_gross_pnl_usd": gross_perp,
@@ -78,11 +82,13 @@ def calculate(r):
         "extra_slippage_usd": slippage_model,
         "net_funding_usd": funding,
         "financing_usd": financing,
+        "net_pnl_ex_funding_usd": net_ex,
+        "estimated_funding_usd": funding,
+        "net_pnl_including_estimated_funding_usd": net,
         "net_pnl_usd": net,
     }.items()}
-    out["funding_events"] = funding_data["funding_events"]
-    out["funding_first_event"] = funding_data["first_event"]
-    out["funding_last_event"] = funding_data["last_event"]
+    out["funding_method"] = funding_data["method"]
+    out["funding_year_segments"] = funding_data["segments"]
     return out
 
 
