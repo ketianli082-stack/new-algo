@@ -45,7 +45,18 @@ def main():
             report["has_active_tasks"] = bool(obj.get("res")) if isinstance(obj.get("res"), list) else None
         report["status"] = "SUCCESS" if report.get("api_status") is True else "API_REJECTED"
     except urllib.error.HTTPError as e:
+        # Never preserve raw response bodies: platform may echo account identifiers.
+        body = e.read(4096).decode("utf-8", errors="replace").lower()
+        if "exceed maximum access count" in body or "too many requests" in body or e.code == 429:
+            reason = "RATE_LIMIT"
+        elif "api_key" in body and any(term in body for term in ("invalid", "incorrect", "unauthorized")):
+            reason = "CREDENTIAL_REJECTED"
+        elif "permission" in body or "forbidden" in body:
+            reason = "PERMISSION_DENIED"
+        else:
+            reason = "UNCLASSIFIED_HTTP_ERROR"
         report.update(status="HTTP_ERROR", http_status=e.code,
+                      reason_category=reason,
                       retry_after_present=bool(e.headers.get("Retry-After")))
     except urllib.error.URLError as e:
         report.update(status="NETWORK_ERROR", exception_type=type(e.reason).__name__)
