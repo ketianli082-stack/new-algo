@@ -1,13 +1,10 @@
 name: V8.2 cost-aware 2021-2025
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/v82-algogene.yml']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: bas001-algogene-cloud
+  group: algogene-cloud
   cancel-in-progress: false
 jobs:
   backtest:
