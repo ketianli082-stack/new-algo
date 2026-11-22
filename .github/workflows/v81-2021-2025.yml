@@ -14,6 +14,7 @@ on:
         options:
           - '2025'
           - '2023-2025'
+          - '2024-2025'
           - '2021-2025'
 
 permissions:
@@ -41,7 +42,7 @@ jobs:
         run: |
           python - <<'PY'
           from tools.algogene_backtest import settings
-          for window in ('2025', '2023-2025', '2021-2025'):
+          for window in ('2025', '2023-2025', '2024-2025', '2021-2025'):
               st = settings(window)
               assert 'TradeCost' not in st, f'{window}: TradeCost must be omitted'
           print('VAL-003/005 PASS: TradeCost absent from all backtest payloads')
