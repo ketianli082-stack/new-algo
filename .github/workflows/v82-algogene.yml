@@ -1,0 +1,37 @@
+name: V8.2 cost-aware 2021-2025
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/v82-algogene.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: bas001-algogene-cloud
+  cancel-in-progress: false
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 115
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify baseline and syntax
+        run: |
+          python -m compileall -q strategy tools tests
+          python -m unittest discover -s tests -v
+      - name: Run A then B (backtest only)
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          python -u tools/algogene_v82_run.py --variant A --window 2021-2025
+          python -u tools/algogene_v82_run.py --variant B --window 2021-2025
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v82-evidence-${{ github.run_id }}
+          path: outputs/v82/
+          if-no-files-found: warn
