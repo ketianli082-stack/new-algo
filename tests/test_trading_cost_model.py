@@ -1,6 +1,6 @@
 import unittest
 from decimal import Decimal
-from tools.bas001_cost_model import calculate
+from tools.trading_cost_model import calculate
 from tools.annual_funding import annual_funding
 
 ANNUAL = "tests/fixtures/funding_annual_synthetic.csv"

@@ -1,16 +1,12 @@
-name: BAS-001 ALGOGENE API 只读诊断
+name: V8 research ALGOGENE API 只读诊断
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/bas001-api-diagnostic.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: bas001-algogene-cloud
+  group: research-algogene-cloud
   cancel-in-progress: false
 
 jobs:
@@ -31,7 +27,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bas001-api-diagnostic-${{ github.run_id }}
-          path: outputs/bas001/api-diagnostic.json
+          name: research-api-diagnostic-${{ github.run_id }}
+          path: outputs/research/api-diagnostic.json
           if-no-files-found: warn
           retention-days: 14

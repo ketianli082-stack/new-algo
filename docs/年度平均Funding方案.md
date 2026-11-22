@@ -1,4 +1,4 @@
-# BAS-001 — 各币种逐年平均 Funding 方案
+# V8 research — 各币种逐年平均 Funding 方案
 
 **基准收益提供两套口径**：
 - `net_pnl_ex_funding_usd`：扣手续费、额外滑点和实际融资成本，但不含资金费率
@@ -24,4 +24,4 @@
 - 不含 Funding 的收益也不是完整实盘经济净收益。
 - 不得把测试人工费率称为历史平均值。
 - 如平台 NAV 本身已经含 Funding 或手续费，不能重复加减。
-- 原始 V8.1 不改动；原逐次历史结算模块仍在 `tools/historical_funding.py`，用于未来精细化研究，不再是 BAS-001 主核算。
+- 原始 V8.1 不改动；原逐次历史结算模块仍在 `tools/historical_funding.py`，用于未来精细化研究，不再是 V8 research 主核算。

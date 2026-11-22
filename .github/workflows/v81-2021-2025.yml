@@ -1,11 +1,6 @@
 name: V8.1 baseline 2021-2025
-# Execute BAS-001 after regression-verified optional status in /meta_instrument response.
+# Execute V8 research after regression-verified optional status in /meta_instrument response.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/v81-2021-2025.yml'
-      # 改动工作流时触发一次全新运行；普通代码变更不会重复提交回测。
   workflow_dispatch:
     inputs:
       window:
@@ -22,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: bas001-algogene-cloud
+  group: algogene-cloud
   cancel-in-progress: false
 
 jobs:
@@ -42,7 +37,7 @@ jobs:
       - name: BAS-000 成本配置预检查（禁止设置固定 TradeCost）
         run: |
           python - <<'PY'
-          from tools.algogene_bas001_run import settings
+          from tools.algogene_backtest import settings
           for window in ('2025', '2023-2025', '2021-2025'):
               st = settings(window)
               assert 'TradeCost' not in st, f'{window}: TradeCost must be omitted'
@@ -53,12 +48,12 @@ jobs:
           ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
           ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
           BAS_WINDOW: ${{ inputs.window || '2021-2025' }}
-        run: python -u tools/algogene_bas001_run.py --window "$BAS_WINDOW"
+        run: python -u tools/algogene_backtest.py --window "$BAS_WINDOW"
       - name: 保留结果或失败诊断
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bas001-platform-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: outputs/bas001/
+          name: v81-platform-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: outputs/v81/
           if-no-files-found: warn
           retention-days: 90

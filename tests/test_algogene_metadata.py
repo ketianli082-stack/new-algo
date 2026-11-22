@@ -1,6 +1,6 @@
 import unittest
 
-from tools.algogene_bas001_run import validate_instrument_metadata, settings
+from tools.algogene_backtest import validate_instrument_metadata, settings
 
 
 class InstrumentMetadataTests(unittest.TestCase):

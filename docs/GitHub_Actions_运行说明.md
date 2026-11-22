@@ -1,7 +1,7 @@
-# BAS-001：使用 GitHub Actions 提交 ALGOGENE 回测
+# V8 research：使用 GitHub Actions 提交 ALGOGENE 回测
 
 ## 入口
-[GitHub Actions — BAS-001 ALGOGENE 2025 基准回测](https://github.com/ketianli082-stack/new-algo/actions/workflows/bas001-algogene.yml)
+[GitHub Actions — V8 research ALGOGENE 2025 基准回测](https://github.com/ketianli082-stack/new-algo/actions/workflows/v81-2021-2025.yml)
 
 ## Actions Secrets
 仅在仓库 Settings → Secrets and variables → Actions 设置：
@@ -37,11 +37,11 @@ risk_free = 0
 3. `GET /meta_instrument` 对四种标的核对 `contractSize=1`。
 4. 单次 `POST /run_backtest`，不重试不确定提交，记录 runtime_id 与 task_id。
 5. `GET /task_status` 轮询；完成后尝试查询 `strategy_stats`、`strategy_logs`、`strategy_trade`、`strategy_pl`。
-6. 无论成功失败，上传 `outputs/bas001/` 为 GitHub Actions Artifact（90 天）。
+6. 无论成功失败，上传 `outputs/v81/` 为 GitHub Actions Artifact（90 天）。
 7. **只提交回测，不调用实盘订单 API。**
 
 ## 成本与 Funding 的特别说明
-BAS-001 的百分比手续费与滑点、BTC/ETH 年度平均 Funding 目前仅为离线分析方案。平台回测不传入固定金额手续费参数，`risk_free=0` 仅用于基准复现；这不是完整成本后的净收益。后续要基于真实订单和有来源的年度费率计算两套收益，并核对平台是否重复计费。
+V8 research 的百分比手续费与滑点、BTC/ETH 年度平均 Funding 目前仅为离线分析方案。平台回测不传入固定金额手续费参数，`risk_free=0` 仅用于基准复现；这不是完整成本后的净收益。后续要基于真实订单和有来源的年度费率计算两套收益，并核对平台是否重复计费。
 
 ## 如何判断成功
 请查看对应 Action 的状态和 Artifact 中的 `platform-responses.json`：

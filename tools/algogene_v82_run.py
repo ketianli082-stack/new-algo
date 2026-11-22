@@ -1,4 +1,4 @@
-"""BAS-001：ALGOGENE 单次云端回测，严格仅调用 BACKTEST API。
+"""V8 research：ALGOGENE 单次云端回测，严格仅调用 BACKTEST API。
 
 GitHub Actions Secrets: ALGOGENE_USER_ID / ALGOGENE_API_KEY
 首轮仅提交 2025 基准；其余区间需手动指定。
@@ -45,7 +45,7 @@ def settings(window):
     if window not in DATES:
         raise ValueError("未知回测时间范围")
     a, b = DATES[window]
-    return dict(strategyName="BAS001 V8.1 H1 " + window,
+    return dict(strategyName="V8.1 H1 " + window,
                 subscribeList=SYMBOLS, StartDate=a, EndDate=b,
                 InitialCapital=1000000, BaseCurrency="USD", risk_free=0,
                 Leverage=1, allowShortSell=True, dataset=60,
@@ -81,7 +81,7 @@ def execute(window, variant):
     secrets = (user, key)
     st = settings(window)
     st["strategyName"] = "V8.2"+variant+" H1 "+window
-    run = {"experiment": "BAS-001", "window": window, "status": "NOT_RUN",
+    run = {"experiment": "V8 research", "window": window, "status": "NOT_RUN",
            "created_from_commit": os.environ.get("GITHUB_SHA"),
            "github_run_id": os.environ.get("GITHUB_RUN_ID"),
            "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
@@ -168,7 +168,7 @@ def execute(window, variant):
             run[dst] = v
         run["status"] = "SUBMITTED"
         save()
-        print("BAS-001", window, "SUBMITTED", run["backtest_id"], flush=True)
+        print("V8 research", window, "SUBMITTED", run["backtest_id"], flush=True)
         deadline = time.monotonic() + 35 * 60
         while time.monotonic() < deadline:
             time.sleep(90)
@@ -213,7 +213,7 @@ def execute(window, variant):
         else:
             run["status"] = "ERROR"
         save()
-        print("BAS-001 stopped:", run["status"], "endpoint=", last_endpoint[0], "HTTP=", getattr(exc, "code", None), type(exc).__name__, flush=True)
+        print("V8 research stopped:", run["status"], "endpoint=", last_endpoint[0], "HTTP=", getattr(exc, "code", None), type(exc).__name__, flush=True)
         return 1
 
 

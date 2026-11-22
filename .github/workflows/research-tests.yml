@@ -1,11 +1,6 @@
-name: BAS-001 成本核算测试
+name: V8 research 成本核算测试
 
 on:
-  push:
-    paths:
-      - 'tools/**'
-      - 'tests/**'
-      - '.github/workflows/bas001-tests.yml'
   pull_request:
     paths:
       - 'tools/**'
@@ -21,7 +16,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: 运行 BAS-001 单元测试
+      - name: 运行 V8 research 单元测试
         run: python -m unittest discover -s tests -v
       - name: 检查示例输出
-        run: python -m tools.bas001_cost_model config/bas001_cost_example.json
+        run: python -m tools.trading_cost_model config/trading_cost_example.json

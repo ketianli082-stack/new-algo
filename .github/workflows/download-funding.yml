@@ -1,4 +1,4 @@
-name: BAS-001 下载历史 Funding（手动）
+name: V8 research 下载历史 Funding（手动）
 on:
   workflow_dispatch:
 jobs:
@@ -27,6 +27,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: bas001-binance-usdm-funding-2021-2025
+          name: research-binance-usdm-funding-2021-2025
           path: data/binance_usdm_funding_2021_2025.csv
           retention-days: 30
