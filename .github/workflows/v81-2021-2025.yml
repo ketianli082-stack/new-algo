@@ -1,6 +1,9 @@
-name: V8.1 baseline 2021-2025
+name: V8.1 statistics validation 2021-2025
 # Execute V8 research after regression-verified optional status in /meta_instrument response.
 on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/v81-2021-2025.yml']
   workflow_dispatch:
     inputs:
       window:
@@ -34,14 +37,14 @@ jobs:
         run: |
           python -m compileall -q strategy tools tests
           python -m unittest discover -s tests -v
-      - name: BAS-000 成本配置预检查（禁止设置固定 TradeCost）
+      - name: VAL-003/005 成本配置预检查（禁止设置固定 TradeCost）
         run: |
           python - <<'PY'
           from tools.algogene_backtest import settings
           for window in ('2025', '2023-2025', '2021-2025'):
               st = settings(window)
               assert 'TradeCost' not in st, f'{window}: TradeCost must be omitted'
-          print('BAS-000 PASS: TradeCost absent from all backtest payloads')
+          print('VAL-003/005 PASS: TradeCost absent from all backtest payloads')
           PY
       - name: 提交 ALGOGENE 云端回测（仅回测，非实盘）
         env:
