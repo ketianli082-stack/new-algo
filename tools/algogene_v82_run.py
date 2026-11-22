@@ -4,6 +4,12 @@ GitHub Actions Secrets: ALGOGENE_USER_ID / ALGOGENE_API_KEY
 首轮仅提交 2025 基准；其余区间需手动指定。
 不调用交易账户或订单 API；不把敏感值写入日志/产物。
 """
+if __package__:
+    from .instrument_strategy import instrument
+    from .extract_trade_statistics import extract
+else:
+    from instrument_strategy import instrument
+    from extract_trade_statistics import extract
 import argparse
 import hashlib
 import json
@@ -75,6 +81,7 @@ def execute(window, variant):
     out = ROOT / "outputs" / "v82" / variant / window
     out.mkdir(parents=True, exist_ok=True)
     source = (ROOT / ("strategy/crypto_basis_v8_2"+variant.lower()+".py")).read_text(encoding="utf-8")
+    source = instrument(source)
     compile(source, "crypto_basis_v8_1.py", "exec")
     user = os.environ.get("ALGOGENE_USER_ID", "").strip()
     key = os.environ.get("ALGOGENE_API_KEY", "").strip()
@@ -200,6 +207,7 @@ def execute(window, variant):
         stats = run["platform_responses"].get("statistics", [{}])[-1]
         perf = stats.get("performance", {}) if isinstance(stats, dict) else {}
         run["native_metrics"] = {k: perf[k] for k in FIELDS if isinstance(perf, dict) and k in perf}
+        run["trade_statistics_status"] = extract(run["platform_responses"].get("console", []), out)
         run["status"] = "COLLECTED" if not run["errors"] else "COLLECTED_WITH_ERRORS"
         save()
         return 0 if not run["errors"] else 1
