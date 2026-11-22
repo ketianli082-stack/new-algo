@@ -1,6 +1,17 @@
 name: V8.2 cost-aware 2021-2025
 on:
   workflow_dispatch:
+    inputs:
+      window:
+        description: Backtest window
+        type: choice
+        required: true
+        default: 2024-2025
+        options:
+          - '2025'
+          - '2023-2025'
+          - '2024-2025'
+          - '2021-2025'
 permissions:
   contents: read
 concurrency:
@@ -24,8 +35,8 @@ jobs:
           ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
           ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
         run: |
-          python -u tools/algogene_v82_run.py --variant A --window 2021-2025
-          python -u tools/algogene_v82_run.py --variant B --window 2021-2025
+          python -u tools/algogene_v82_run.py --variant A --window "${{ inputs.window || '2021-2025' }}"
+          python -u tools/algogene_v82_run.py --variant B --window "${{ inputs.window || '2021-2025' }}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
