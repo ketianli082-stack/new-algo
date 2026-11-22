@@ -27,6 +27,7 @@ SYMBOLS = ["BTCUSD", "BTCUSDM", "ETHUSD", "ETHUSDM"]
 DATES = {
     "2025": ("2025-01", "2025-12"),
     "2023-2025": ("2023-01", "2025-12"),
+    "2024-2025": ("2024-01", "2025-12"),
     "2021-2025": ("2021-01", "2025-12"),
 }
 FIELDS = ("Score_Total", "TotalPnL", "AnnualSharpe", "maxDrawdown_pct",
