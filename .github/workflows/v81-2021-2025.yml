@@ -1,0 +1,64 @@
+name: V8.1 baseline 2021-2025
+# Execute BAS-001 after regression-verified optional status in /meta_instrument response.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v81-2021-2025.yml'
+      # 改动工作流时触发一次全新运行；普通代码变更不会重复提交回测。
+  workflow_dispatch:
+    inputs:
+      window:
+        description: '回测区间'
+        type: choice
+        required: true
+        default: '2021-2025'
+        options:
+          - '2025'
+          - '2023-2025'
+          - '2021-2025'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bas001-algogene-cloud
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: 设置 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 检查本地脚本与模型测试
+        run: |
+          python -m compileall -q strategy tools tests
+          python -m unittest discover -s tests -v
+      - name: BAS-000 成本配置预检查（禁止设置固定 TradeCost）
+        run: |
+          python - <<'PY'
+          from tools.algogene_bas001_run import settings
+          for window in ('2025', '2023-2025', '2021-2025'):
+              st = settings(window)
+              assert 'TradeCost' not in st, f'{window}: TradeCost must be omitted'
+          print('BAS-000 PASS: TradeCost absent from all backtest payloads')
+          PY
+      - name: 提交 ALGOGENE 云端回测（仅回测，非实盘）
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+          BAS_WINDOW: ${{ inputs.window || '2021-2025' }}
+        run: python -u tools/algogene_bas001_run.py --window "$BAS_WINDOW"
+      - name: 保留结果或失败诊断
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bas001-platform-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: outputs/bas001/
+          if-no-files-found: warn
+          retention-days: 90
