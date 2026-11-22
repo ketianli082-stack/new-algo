@@ -1,0 +1,22 @@
+name: V8 research 成本核算测试
+
+on:
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'tests/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 运行 V8 research 单元测试
+        run: python -m unittest discover -s tests -v
+      - name: 检查示例输出
+        run: python -m tools.trading_cost_model config/trading_cost_example.json
