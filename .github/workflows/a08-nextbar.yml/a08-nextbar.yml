@@ -1,0 +1,40 @@
+name: A08 next-hour execution stress 2024-2025
+on:
+  workflow_dispatch:
+    inputs:
+      window:
+        description: Backtest window
+        type: choice
+        required: true
+        default: 2024-2025
+        options:
+          - '2024-2025'
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  nextbar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: |
+          python -m compileall -q strategy tools tests
+      - name: Run V8.1-NEXTBAR backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          python -u tools/a08_algogene_nextbar_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a08-nextbar-${{ github.run_id }}
+          path: outputs/a08_nextbar/
+          if-no-files-found: warn
