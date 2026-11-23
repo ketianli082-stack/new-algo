@@ -1,0 +1,82 @@
+name: A09-A11 cooling cooldown experiments (stageA products)
+on:
+  workflow_dispatch:
+    inputs:
+      window:
+        type: choice
+        description: backtest window
+        required: true
+        default: 2024-2025
+        options:
+          - 2024-2025
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  a09:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run A09 cooldown 3h backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/a09_algogene_cooling_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a09-cool3h-${{ github.run_id }}
+          path: outputs/a09_cool3h/
+          if-no-files-found: warn
+  a10:
+    needs: a09
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run A10 cooldown 1h backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/a10_algogene_cooling_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a10-cool1h-${{ github.run_id }}
+          path: outputs/a10_cool1h/
+          if-no-files-found: warn
+  a11:
+    needs: a10
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run A11 reason-aware cooldown backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/a11_algogene_cooling_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a11-reasoncool-${{ github.run_id }}
+          path: outputs/a11_reasoncool/
+          if-no-files-found: warn
