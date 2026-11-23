@@ -1,0 +1,79 @@
+name: A13-A15 cost-aware take-profit and position floor (stageA products)
+on:
+  workflow_dispatch:
+    inputs:
+      window:
+        type: choice
+        description: backtest window
+        required: true
+        default: 2024-2025
+        options:
+          - 2024-2025
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  a13:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run A13 cost-aware take-profit (floor 24bp round-trip, no position floor) backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/a13_algogene_costtp_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: costtp-${{ github.run_id }}
+          path: outputs/a13_costtp/
+  a14:
+    needs: a13
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run A14 A13 + minimum position 50% of pair cap backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/a14_algogene_costtp_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: costtp_floor50-${{ github.run_id }}
+          path: outputs/a14_costtp_floor50/
+  a15:
+    needs: a14
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run A15 A13 + minimum position 75% of pair cap backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/a15_algogene_costtp_run.py --window "${{ inputs.window }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: costtp_floor75-${{ github.run_id }}
+          path: outputs/a15_costtp_floor75/
