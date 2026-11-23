@@ -7,6 +7,8 @@ on:
         description: backtest window
         required: true
         default: 2024-2025
+        options:
+          - 2024-2025
 permissions:
   contents: read
 concurrency:
