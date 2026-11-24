@@ -1,10 +1,6 @@
 name: V8 research 成本核算测试
 
 on:
-  pull_request:
-    paths:
-      - 'tools/**'
-      - 'tests/**'
   workflow_dispatch:
 
 jobs:
