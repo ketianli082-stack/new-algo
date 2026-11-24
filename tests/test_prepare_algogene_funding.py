@@ -21,6 +21,7 @@ class FundingPreparationTests(unittest.TestCase):
                 "fundingTime": int(dt.timestamp() * 1000),
                 "fundingRate": rate,
                 "markPrice": "30000.0",
+                "rateType": "Regular",
             })
         return result
 

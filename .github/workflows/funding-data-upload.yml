@@ -6,6 +6,9 @@ on:
     branches: [lkt]
     paths:
       - .github/workflows/funding-data-upload.yml
+      - tools/prepare_algogene_funding.py
+      - tools/upload_algogene_funding.py
+      - tests/test_prepare_algogene_funding.py
 
 permissions:
   contents: read
@@ -28,7 +31,7 @@ jobs:
       - name: Test independent funding preparation
         run: python -m unittest tests.test_prepare_algogene_funding
 
-      - name: Download exact Binance settlements and prepare daily proxy curves
+      - name: Download exact settlements and cross-check Binance Vision archive
         run: python -m tools.prepare_algogene_funding
 
       - name: Upload raw files, daily proxy curves, audit report, then metadata
