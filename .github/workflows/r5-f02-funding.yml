@@ -1,5 +1,8 @@
 name: R5-F02 native funding daily approximation
 on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r5-f02-funding.yml']
   workflow_dispatch:
     inputs:
       window:
