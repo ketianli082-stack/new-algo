@@ -1,6 +1,12 @@
+import json
 import unittest
 
-from tools.r5_11a_algogene_history_api import safe_depth_summary, summarize_bars
+from tools.r5_11a_algogene_history_api import (
+    classify_http_error,
+    safe_depth_summary,
+    sanitize_error_body,
+    summarize_bars,
+)
 
 
 class R511AHistoryApiTests(unittest.TestCase):
@@ -55,6 +61,20 @@ class R511AHistoryApiTests(unittest.TestCase):
                 "first_level_width": 2,
                 "first_level_numeric": True,
             },
+        )
+
+    def test_error_summary_redacts_credentials_and_email(self):
+        result = sanitize_error_body(
+            '{"status": false, "res": "upgrade plan for me@example.com", '
+            '"user": "user-123", "api_key": "key-456"}',
+            ("user-123", "key-456"),
+        )
+        self.assertEqual(result["user"], "[REDACTED]")
+        self.assertEqual(result["api_key"], "[REDACTED]")
+        self.assertEqual(result["res"], "upgrade plan for [REDACTED_EMAIL]")
+        self.assertEqual(
+            classify_http_error(400, json.dumps(result)),
+            "SUBSCRIPTION_OR_DATA_PLAN",
         )
 
 
