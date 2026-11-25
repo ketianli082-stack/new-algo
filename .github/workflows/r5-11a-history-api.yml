@@ -1,0 +1,46 @@
+name: R5-11A ALGOGENE 小时历史行情 API 诊断
+
+on:
+  workflow_dispatch:
+    inputs:
+      timestamp:
+        description: 历史样本截止时间（ALGOGENE 格式）
+        required: true
+        default: '2025-12-31 23:59:59'
+      count:
+        description: 每个品种保存的小时 bar 数（1-10）
+        required: true
+        default: '3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r5-11a-algogene-history-api
+  cancel-in-progress: false
+
+jobs:
+  history-api-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 查询四品种小时历史行情并生成脱敏报告
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: >-
+          python -u tools/r5_11a_algogene_history_api.py
+          --timestamp "${{ inputs.timestamp }}"
+          --count "${{ inputs.count }}"
+      - name: 上传 R5-11A 脱敏诊断结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r5-11a-history-api-${{ github.run_id }}
+          path: outputs/r5_11a/history-api-diagnostic.json
+          if-no-files-found: error
+          retention-days: 30
