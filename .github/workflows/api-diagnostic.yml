@@ -5,6 +5,7 @@ on:
     branches: [lkt]
     paths:
       - .github/workflows/api-diagnostic.yml
+      - tools/r5_11a_algogene_history_api.py
 
 permissions:
   contents: read
