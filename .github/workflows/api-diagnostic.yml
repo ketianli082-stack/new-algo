@@ -1,6 +1,10 @@
 name: R5-11A ALGOGENE 小时历史行情 API 诊断
 on:
   workflow_dispatch:
+  push:
+    branches: [lkt]
+    paths:
+      - .github/workflows/api-diagnostic.yml
 
 permissions:
   contents: read
