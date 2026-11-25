@@ -1,9 +1,15 @@
 name: R5-07 P80 portfolio exposure
 on:
-  push:
-    branches: [lkt]
-    paths: ['.github/workflows/r5-07-p80.yml']
   workflow_dispatch:
+    inputs:
+      window:
+        description: Backtest window
+        required: true
+        type: choice
+        default: "2021-2023"
+        options:
+          - "2021-2023"
+          - "2021-2025"
 permissions:
   contents: read
 concurrency:
@@ -20,11 +26,22 @@ jobs:
           python-version: '3.11'
       - name: Verify syntax
         run: python -m py_compile tools/r5_07_p80_run.py
-      - name: Run portfolio cap 80 percent backtest
+      - name: Run frozen R5-07 P80 backtest
         env:
           ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
           ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
-        run: python -u tools/r5_07_p80_run.py --window 2024-2025
+          BACKTEST_WINDOW: ${{ inputs.window }}
+        run: |
+          python -u - <<'PY'
+          import os
+          from tools import r5_07_p80_run as runner
+
+          window = os.environ["BACKTEST_WINDOW"]
+          if window not in {"2021-2023", "2021-2025"}:
+              raise SystemExit("Invalid Phase C backtest window")
+          runner.DATES["2021-2023"] = ("2021-01", "2023-12")
+          raise SystemExit(runner.execute(window))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
