@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -20,7 +21,7 @@ import urllib.request
 
 API_URL = "https://algogene.com/rest/v1/history_price"
 SYMBOLS = ("BTCUSD", "BTCUSDM", "ETHUSD", "ETHUSDM")
-DEFAULT_TIMESTAMP = "2025-12-31"
+DEFAULT_TIMESTAMP = "2026-11-24"
 DEFAULT_COUNT = 3
 MIN_REQUEST_GAP_SECONDS = 65
 OUT = Path("outputs/r5_11a/history-api-diagnostic.json")
@@ -144,15 +145,58 @@ def summarize_bars(payload: object, sample_limit: int = 3) -> dict:
     return result
 
 
-def classify_http_error(error: urllib.error.HTTPError) -> str:
-    body = error.read(4096).decode("utf-8", errors="replace").lower()
-    if error.code == 429 or "exceed maximum access count" in body or "too many requests" in body:
+def classify_http_error(code: int, body: str) -> str:
+    lowered = body.lower()
+    if code == 429 or "exceed maximum access count" in lowered or "too many requests" in lowered:
         return "RATE_LIMIT"
-    if "api_key" in body and any(word in body for word in ("invalid", "incorrect", "unauthorized")):
+    if "api_key" in lowered and any(
+        word in lowered for word in ("invalid", "incorrect", "unauthorized")
+    ):
         return "CREDENTIAL_REJECTED"
-    if error.code in (401, 403) or "permission" in body or "forbidden" in body:
+    if code in (401, 403) or "permission" in lowered or "forbidden" in lowered:
         return "PERMISSION_DENIED"
+    if any(word in lowered for word in ("subscribe", "subscription", "upgrade", "plan")):
+        return "SUBSCRIPTION_OR_DATA_PLAN"
+    if "timestamp" in lowered or "date" in lowered:
+        return "DATE_OR_TIMESTAMP_REJECTED"
+    if "interval" in lowered:
+        return "INTERVAL_REJECTED"
+    if "instrument" in lowered or "symbol" in lowered:
+        return "INSTRUMENT_REJECTED"
     return "UNCLASSIFIED_HTTP_ERROR"
+
+
+def sanitize_error_body(body: str, secrets: tuple[str, str]) -> object:
+    """Keep a short useful error while removing account-identifying values."""
+    text = body
+    for secret in secrets:
+        if secret:
+            text = text.replace(secret, "[REDACTED]")
+    text = re.sub(
+        r"(?i)(user|user_id|api_key|apikey|token|password)=([^&\s]+)",
+        r"\1=[REDACTED]",
+        text,
+    )
+    text = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[REDACTED_EMAIL]", text)
+
+    def clean(value: object) -> object:
+        if isinstance(value, dict):
+            return {
+                str(key): ("[REDACTED]" if normalized_key(key) in DENY_FIELDS else clean(item))
+                for key, item in value.items()
+            }
+        if isinstance(value, list):
+            return [clean(item) for item in value[:10]]
+        if isinstance(value, str):
+            return value[:500]
+        if is_safe_scalar(value):
+            return value
+        return type(value).__name__
+
+    try:
+        return clean(json.loads(text))
+    except json.JSONDecodeError:
+        return re.sub(r"\s+", " ", text).strip()[:500]
 
 
 def query_symbol(symbol: str, user: str, key: str, count: int, timestamp: str) -> dict:
@@ -178,10 +222,12 @@ def query_symbol(symbol: str, user: str, key: str, count: int, timestamp: str) -
         accepted = item.get("api_status") is not False and item.get("bar_count", 0) > 0
         item["status"] = "SUCCESS" if accepted else "EMPTY_OR_REJECTED"
     except urllib.error.HTTPError as error:
+        error_body = error.read(4096).decode("utf-8", errors="replace")
         item.update(
             status="HTTP_ERROR",
             http_status=error.code,
-            reason_category=classify_http_error(error),
+            reason_category=classify_http_error(error.code, error_body),
+            api_error_summary=sanitize_error_body(error_body, (user, key)),
             retry_after_present=bool(error.headers.get("Retry-After")),
         )
     except urllib.error.URLError as error:
