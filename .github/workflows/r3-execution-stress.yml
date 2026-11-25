@@ -1,0 +1,56 @@
+name: R3-11 and R3-12 execution stress queue
+on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r3-execution-stress.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  single-leg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m py_compile tools/r3_execution_stress.py tools/r3_execution_stress_run.py
+      - name: Run R3-11A then R3-11B
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          python -u tools/r3_execution_stress_run.py --experiment R3-11A
+          sleep 75
+          python -u tools/r3_execution_stress_run.py --experiment R3-11B
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3-11-${{ github.run_id }}
+          path: outputs/r3_execution_stress/
+  outage:
+    needs: single-leg
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run R3-12A then R3-12B
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          python -u tools/r3_execution_stress_run.py --experiment R3-12A
+          sleep 75
+          python -u tools/r3_execution_stress_run.py --experiment R3-12B
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3-12-${{ github.run_id }}
+          path: outputs/r3_execution_stress/

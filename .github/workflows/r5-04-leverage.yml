@@ -1,0 +1,35 @@
+name: R5-04 leverage 2x and 3x
+on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r5-04-leverage.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  leverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m py_compile tools/r5_04_leverage_run.py
+      - name: Run leverage 2x then 3x
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          python -u tools/r5_04_leverage_run.py --window 2024-2025 --leverage 2
+          sleep 75
+          python -u tools/r5_04_leverage_run.py --window 2024-2025 --leverage 3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r5-04-leverage-${{ github.run_id }}
+          path: outputs/r5_04_leverage/

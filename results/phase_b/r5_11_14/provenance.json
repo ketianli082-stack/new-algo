@@ -1,0 +1,10 @@
+{
+  "generated_at_utc": "2026-11-25T05:13:38.872875+00:00",
+  "binance_period": "2024-01-01T00:00:00Z/2025-12-31T23:00:00Z",
+  "bar_frequency": "1h",
+  "archives": 96,
+  "market_rows": 70176,
+  "impact_formula": "impact_bp = Y * hourly_log_return_sigma * sqrt(participation) * 10000",
+  "capacity_warning": "Scenario estimate only; not observed executable capacity.",
+  "trade_sample_warning": "ALGOGENE strategy_trade returned only first 100 of 1694 fills per run."
+}

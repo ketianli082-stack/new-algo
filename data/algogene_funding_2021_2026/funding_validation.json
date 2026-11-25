@@ -1,0 +1,101 @@
+{
+  "status": "verified",
+  "official_source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate",
+  "download_endpoint": "https://api-dev.pipai.org/fapi/v1/fundingRate",
+  "download_endpoint_role": "transparent Binance API pass-through used because GitHub US runners receive HTTP 451 from fapi.binance.com",
+  "official_cross_check_source": "https://data.binance.vision/data/futures/um/monthly/fundingRate",
+  "market": "Binance USD-M perpetual futures",
+  "requested_start_utc": "2021-01-01T00:00:00Z",
+  "observed_until_utc_exclusive": "2026-11-24T06:31:21Z",
+  "hard_end_cap_utc_exclusive": "2026-11-25T00:00:00Z",
+  "raw_unit": "decimal funding rate per actual Binance settlement",
+  "curve_unit": "decimal sum of actual settlement rates per UTC calendar day",
+  "curve_frequency": "daily approximation required by documented ALGOGENE daily financing behavior",
+  "curve_sign": "Long=-daily_sum; Short=+daily_sum; positive Binance rate means longs pay shorts",
+  "exact_8h_representation": false,
+  "warnings": [
+    "Curve rows aggregate exact intraday settlements by UTC date; they do not preserve 8-hour cash-flow timing.",
+    "Binance BTCUSDT/ETHUSDT rates are proxy data and are not claimed to be ALGOGENE-native rates.",
+    "The final UTC day can be partial when the workflow runs before 24:00 UTC."
+  ],
+  "symbols": {
+    "BTCUSDT": {
+      "events": 6460,
+      "duplicate_timestamps": 0,
+      "first_settlement_utc": "2021-01-01T00:00:00Z",
+      "last_settlement_utc": "2026-11-24T00:00:00Z",
+      "largest_gap_hours": 8.000013055555556,
+      "gaps_over_8_hours": 0,
+      "interval_hours_histogram": {
+        "7.99999": 54,
+        "8": 6344,
+        "8.00001": 61
+      },
+      "official_archive_cross_check": {
+        "month": "2026-10",
+        "official_archive_file": "BTCUSDT-fundingRate-2026-10.zip",
+        "official_archive_sha256": "9c09b0bc6d8a57da06c34ec41add7dc9917dcb45dd83f7393ab0b3c2a2c34e5e",
+        "rows_compared": 93,
+        "timestamp_and_rate_mismatches": 0,
+        "status": "exact_match"
+      },
+      "raw_file": "BTCUSDT_binance_usdm_funding_raw.csv",
+      "curve_file": "BTCUSDT_algogene_funding_daily_approx.csv",
+      "curve_name": "BINANCE_BTCUSDT_USDM_FUNDING_DAILY_APPROX",
+      "curve_days": 2154,
+      "first_curve_date": "2021-01-01",
+      "last_curve_date": "2026-11-24",
+      "last_curve_day_event_count": 1
+    },
+    "ETHUSDT": {
+      "events": 6460,
+      "duplicate_timestamps": 0,
+      "first_settlement_utc": "2021-01-01T00:00:00Z",
+      "last_settlement_utc": "2026-11-24T00:00:00Z",
+      "largest_gap_hours": 8.000013055555556,
+      "gaps_over_8_hours": 0,
+      "interval_hours_histogram": {
+        "7.99999": 54,
+        "8": 6344,
+        "8.00001": 61
+      },
+      "official_archive_cross_check": {
+        "month": "2026-10",
+        "official_archive_file": "ETHUSDT-fundingRate-2026-10.zip",
+        "official_archive_sha256": "3aa5114f2e35dfd597354417de9bdb4622bf41e91e667169bd5366e6246e85bc",
+        "rows_compared": 93,
+        "timestamp_and_rate_mismatches": 0,
+        "status": "exact_match"
+      },
+      "raw_file": "ETHUSDT_binance_usdm_funding_raw.csv",
+      "curve_file": "ETHUSDT_algogene_funding_daily_approx.csv",
+      "curve_name": "BINANCE_ETHUSDT_USDM_FUNDING_DAILY_APPROX",
+      "curve_days": 2154,
+      "first_curve_date": "2021-01-01",
+      "last_curve_date": "2026-11-24",
+      "last_curve_day_event_count": 1
+    }
+  },
+  "files": {
+    "BTCUSDT_binance_usdm_funding_raw.csv": {
+      "bytes": 462101,
+      "sha256": "ca3ce928b61d7c28f7ddaf9776379e3e602eac2fd72ee75cc639cf622f6abcea"
+    },
+    "BTCUSDT_algogene_funding_daily_approx.csv": {
+      "bytes": 75407,
+      "sha256": "059d5380ea196232e00ef08d4578c8f12ea6ef3e4faf0976b53a90db390cf183"
+    },
+    "ETHUSDT_binance_usdm_funding_raw.csv": {
+      "bytes": 458224,
+      "sha256": "563914478ee7f08e1f818c24a8a4c456554151b0c818d591f1b885fd69b6be5b"
+    },
+    "ETHUSDT_algogene_funding_daily_approx.csv": {
+      "bytes": 75407,
+      "sha256": "2760d76414a280a4a3da288eb8b3aaafee15010c952828da50c7079f0bc57b2e"
+    },
+    "_meta_.json": {
+      "bytes": 449,
+      "sha256": "f9bc1fa5f77105af4d4fa7b6c6db7d905e1f433c4883446d53d593831012f896"
+    }
+  }
+}

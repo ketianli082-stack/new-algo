@@ -1,0 +1,34 @@
+{
+  "BINANCE_BTCUSDT_USDM_FUNDING_DAILY_APPROX": {
+    "file": "BTCUSDT_algogene_funding_daily_approx.csv",
+    "file_delimiter": ",",
+    "fmt_time": "%Y-%m-%d",
+    "col_time": 0,
+    "col_long": 1,
+    "col_short": 2
+  },
+  "BINANCE_ETHUSDT_USDM_FUNDING_DAILY_APPROX": {
+    "file": "ETHUSDT_algogene_funding_daily_approx.csv",
+    "file_delimiter": ",",
+    "fmt_time": "%Y-%m-%d",
+    "col_time": 0,
+    "col_long": 1,
+    "col_short": 2
+  },
+  "BINANCE_BTCUSDT_USDM_FUNDING_DAILY_APPROX_ANNUALIZED": {
+    "file": "BTCUSDT_algogene_funding_annualized.csv",
+    "file_delimiter": ",",
+    "fmt_time": "%Y-%m-%d",
+    "col_time": 0,
+    "col_long": 1,
+    "col_short": 2
+  },
+  "BINANCE_ETHUSDT_USDM_FUNDING_DAILY_APPROX_ANNUALIZED": {
+    "file": "ETHUSDT_algogene_funding_annualized.csv",
+    "file_delimiter": ",",
+    "fmt_time": "%Y-%m-%d",
+    "col_time": 0,
+    "col_long": 1,
+    "col_short": 2
+  }
+}

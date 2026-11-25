@@ -1,0 +1,40 @@
+name: R5-F02 native funding daily approximation
+on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r5-f02-funding.yml']
+  workflow_dispatch:
+    inputs:
+      window:
+        type: choice
+        description: backtest window
+        required: true
+        default: 2024-2025
+        options:
+          - 2024-2025
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  quote_diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m compileall -q strategy tools tests
+      - name: Run R5-F02 funding-enabled backtest
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: python -u tools/r5_f02_funding_run.py --window "${{ inputs.window || '2024-2025' }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r5-f02-funding-${{ github.run_id }}
+          path: outputs/r5_f02_funding/

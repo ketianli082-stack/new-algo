@@ -1,0 +1,25 @@
+venue,symbol,participation_assumption,hourly_volume_basis,hourly_quote_volume_usd,max_fill_usd_scenario,nav_capacity_policy_20pct_leg_usd,nav_capacity_truncated_sample_p95_fill_usd,policy_fill_ratio_source,tail_fill_ratio_source
+spot,BTCUSDT,0.01,p10_hour,24559833.4294,245598.334294,1227991.67147,1154267.11502,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,BTCUSDT,0.01,median_hour,62905557.7381,629055.577381,3145277.8869,2956445.81051,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,BTCUSDT,0.05,p10_hour,24559833.4294,1227991.67147,6139958.35735,5771335.57511,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,BTCUSDT,0.05,median_hour,62905557.7381,3145277.8869,15726389.4345,14782229.0525,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,BTCUSDT,0.1,p10_hour,24559833.4294,2455983.34294,12279916.7147,11542671.1502,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,BTCUSDT,0.1,median_hour,62905557.7381,6290555.77381,31452778.869,29564458.1051,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,BTCUSDT,0.01,p10_hour,186811192.041,1868111.92041,9340559.60205,8760071.033,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,BTCUSDT,0.01,median_hour,477413746.237,4774137.46237,23870687.3118,22387193.6337,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,BTCUSDT,0.05,p10_hour,186811192.041,9340559.60205,46702798.0102,43800355.165,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,BTCUSDT,0.05,median_hour,477413746.237,23870687.3118,119353436.559,111935968.168,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,BTCUSDT,0.1,p10_hour,186811192.041,18681119.2041,93405596.0205,87600710.33,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,BTCUSDT,0.1,median_hour,477413746.237,47741374.6237,238706873.118,223871936.337,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,ETHUSDT,0.01,p10_hour,15150780.4877,151507.804877,757539.024387,713773.658779,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,ETHUSDT,0.01,median_hour,41652408.5208,416524.085208,2082620.42604,1962301.02145,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,ETHUSDT,0.05,p10_hour,15150780.4877,757539.024387,3787695.12194,3568868.2939,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,ETHUSDT,0.05,median_hour,41652408.5208,2082620.42604,10413102.1302,9811505.10726,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,ETHUSDT,0.1,p10_hour,15150780.4877,1515078.04877,7575390.24387,7137736.58779,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+spot,ETHUSDT,0.1,median_hour,41652408.5208,4165240.85208,20826204.2604,19623010.2145,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,ETHUSDT,0.01,p10_hour,119737651.774,1197376.51774,5986882.5887,5580731.78462,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,ETHUSDT,0.01,median_hour,329975273.289,3299752.73289,16498763.6645,15379485.638,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,ETHUSDT,0.05,p10_hour,119737651.774,5986882.5887,29934412.9435,27903658.9231,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,ETHUSDT,0.05,median_hour,329975273.289,16498763.6645,82493818.3224,76897428.19,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,ETHUSDT,0.1,p10_hour,119737651.774,11973765.1774,59868825.887,55807317.8462,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills
+um,ETHUSDT,0.1,median_hour,329975273.289,32997527.3289,164987636.645,153794856.38,strategy single leg target approximately 20pct contemporaneous NAV,R5-07_truncated_first_100_fills

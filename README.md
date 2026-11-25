@@ -67,3 +67,6 @@
 每次实验必须记录：实验编号、目的、假设、唯一变化因素、代码 commit、平台配置（时间、品种、初始资金、杠杆、手续费、无风险利率）、Backtest ID、交易明细、结果指标、结论及是否保留。空白指标保持空白，不能编造。
 
 最后更新：2026-11-22。
+
+## R3 execution stress
+[R3-11 / R3-12 experiment protocol](experiments/R3-11_R3-12_execution_stress.md). Sequential queue: 11A, 11B, 12A, 12B.

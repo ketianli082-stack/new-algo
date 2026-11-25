@@ -1,0 +1,36 @@
+name: R5-09 R5-10 P80 capital scale 10M and 100M
+on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r5-09-10-p80-scale.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  mincap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m py_compile tools/r5_09_10_p80_scale_run.py
+      - name: Run two sequential capital backtests
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          for capital in 10000000 100000000; do
+            python -u tools/r5_09_10_p80_scale_run.py --window 2024-2025 --capital "$capital"
+            if [ "$capital" != 100000000 ]; then sleep 75; fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r5-09-10-p80-scale-${{ github.run_id }}
+          path: outputs/r5_09_10_p80_scale/

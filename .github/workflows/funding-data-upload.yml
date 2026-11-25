@@ -1,0 +1,51 @@
+name: Binance Funding 2021-2026 prepare and ALGOGENE upload
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [lkt]
+    paths:
+      - .github/workflows/funding-data-upload.yml
+      - tools/prepare_algogene_funding.py
+      - tools/upload_algogene_funding.py
+      - tests/test_prepare_algogene_funding.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: funding-data-upload-lkt
+  cancel-in-progress: false
+
+jobs:
+  prepare-validate-upload:
+    if: github.ref == 'refs/heads/lkt'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Test independent funding preparation
+        run: python -m unittest tests.test_prepare_algogene_funding
+
+      - name: Download exact settlements and cross-check Binance Vision archive
+        run: python -m tools.prepare_algogene_funding
+
+      - name: Upload raw files, daily proxy curves, audit report, then metadata
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+          ALGOGENE_META_EXPECTED_STATE: absent_confirmed_by_user
+        run: python -m tools.upload_algogene_funding
+
+      - name: Preserve data, validation, metadata, and upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: binance-usdm-funding-2021-2026-algogene
+          path: outputs/funding_2021_2026/
+          if-no-files-found: warn
+          retention-days: 90

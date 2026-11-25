@@ -1,0 +1,35 @@
+name: R5-F01 fixed BTC short funding calibration
+on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r5-f01-calibration.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m py_compile strategy/r5_f01_funding_probe.py tools/r5_f01_probe_run.py
+      - name: Control then funded (no parallel submission)
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          python -u tools/r5_f01_probe_run.py --window control
+          sleep 75
+          python -u tools/r5_f01_probe_run.py --window funded
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r5-f01-calibration-${{ github.run_id }}
+          path: outputs/r5_f01_probe/

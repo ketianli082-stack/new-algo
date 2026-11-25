@@ -1,0 +1,36 @@
+name: R5-05 minimum capital 100 to 100000
+on:
+  push:
+    branches: [lkt]
+    paths: ['.github/workflows/r5-05-mincap.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: algogene-cloud
+  cancel-in-progress: false
+jobs:
+  mincap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify syntax
+        run: python -m py_compile tools/r5_05_mincap_run.py
+      - name: Run four sequential capital backtests
+        env:
+          ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
+          ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
+        run: |
+          for capital in 100 1000 10000 100000; do
+            python -u tools/r5_05_mincap_run.py --window 2024-2025 --capital "$capital"
+            if [ "$capital" != 100000 ]; then sleep 75; fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r5-05-mincap-${{ github.run_id }}
+          path: outputs/r5_05_mincap/
