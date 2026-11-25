@@ -20,7 +20,7 @@ import urllib.request
 
 API_URL = "https://algogene.com/rest/v1/history_price"
 SYMBOLS = ("BTCUSD", "BTCUSDM", "ETHUSD", "ETHUSDM")
-DEFAULT_TIMESTAMP = "2025-12-31 23:59:59"
+DEFAULT_TIMESTAMP = "2025-12-31"
 DEFAULT_COUNT = 3
 MIN_REQUEST_GAP_SECONDS = 65
 OUT = Path("outputs/r5_11a/history-api-diagnostic.json")
