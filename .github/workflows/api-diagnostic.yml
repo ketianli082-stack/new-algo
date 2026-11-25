@@ -1,4 +1,4 @@
-name: V8 research ALGOGENE API 只读诊断
+name: R5-11A ALGOGENE 小时历史行情 API 诊断
 on:
   workflow_dispatch:
 
@@ -6,28 +6,28 @@ permissions:
   contents: read
 
 concurrency:
-  group: research-algogene-cloud
+  group: r5-11a-algogene-history-api
   cancel-in-progress: false
 
 jobs:
   api-diagnostic:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: 仅查询任务状态以验证凭证和 HTTP 状态
+      - name: 查询四品种小时历史行情并生成脱敏报告
         env:
           ALGOGENE_USER_ID: ${{ secrets.ALGOGENE_USER_ID }}
           ALGOGENE_API_KEY: ${{ secrets.ALGOGENE_API_KEY }}
-        run: python -u tools/algogene_api_diagnostic.py
-      - name: 上传脱敏诊断报告（无原始响应或密钥）
+        run: python -u tools/r5_11a_algogene_history_api.py
+      - name: 上传 R5-11A 脱敏诊断结果
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: research-api-diagnostic-${{ github.run_id }}
-          path: outputs/research/api-diagnostic.json
-          if-no-files-found: warn
-          retention-days: 14
+          name: r5-11a-history-api-${{ github.run_id }}
+          path: outputs/r5_11a/history-api-diagnostic.json
+          if-no-files-found: error
+          retention-days: 30
